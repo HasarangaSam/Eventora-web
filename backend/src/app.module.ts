@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller.js';
+import { PrismaModule } from './prisma/prisma.module.js';
 
 @Module({
   imports: [
@@ -8,6 +9,7 @@ import { AppController } from './app.controller.js';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    PrismaModule,
   ],
   controllers: [AppController],
 })

@@ -1,0 +1,205 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  ATTENDEE
+  ORGANIZER
+  ADMIN
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+  COMPLETED
+}
+
+enum RegistrationStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  EXPIRED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+}
+
+enum TicketStatus {
+  VALID
+  CANCELLED
+  CHECKED_IN
+}
+
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  name      String
+  email     String
+  role      UserRole @default(ATTENDEE)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  organizedEvents Event[]        @relation("EventOrganizer")
+  registrations   Registration[] @relation("RegistrationAttendee")
+  tickets         Ticket[]       @relation("TicketAttendee")
+
+  @@index([email])
+  @@index([role, isActive])
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+
+  events Event[]
+
+  @@index([isActive, name])
+}
+
+model Event {
+  id                 String      @id @default(cuid())
+  title              String
+  description        String      @db.Text
+  venue              String
+  address            String
+  coverImageUrl      String?
+  coverImagePublicId String?
+  startsAt           DateTime    @db.Timestamptz(3)
+  endsAt             DateTime    @db.Timestamptz(3)
+  maxCapacity        Int
+  registeredCount    Int         @default(0)
+  status             EventStatus @default(DRAFT)
+  organizerId        String
+  categoryId         String
+  createdAt          DateTime    @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime    @updatedAt @db.Timestamptz(3)
+
+  organizer     User           @relation("EventOrganizer", fields: [organizerId], references: [id], onDelete: Restrict)
+  category      Category       @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  sessions      EventSession[]
+  ticketTypes   TicketType[]
+  registrations Registration[]
+  tickets       Ticket[]
+
+  @@index([status, startsAt])
+  @@index([categoryId, status, startsAt])
+  @@index([organizerId, createdAt])
+  @@index([title])
+}
+
+model EventSession {
+  id          String   @id @default(cuid())
+  eventId     String
+  title       String
+  description String   @db.Text
+  startsAt    DateTime @db.Timestamptz(3)
+  endsAt      DateTime @db.Timestamptz(3)
+  venue       String?
+  speakerName String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Restrict)
+
+  @@index([eventId, isActive, startsAt])
+}
+
+model TicketType {
+  id           String    @id @default(cuid())
+  eventId      String
+  name         String
+  description  String?   @db.Text
+  price        Int
+  quantity     Int
+  soldQuantity Int       @default(0)
+  salesStart   DateTime? @db.Timestamptz(3)
+  salesEnd     DateTime? @db.Timestamptz(3)
+  isActive     Boolean   @default(true)
+  createdAt    DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime  @updatedAt @db.Timestamptz(3)
+
+  event         Event          @relation(fields: [eventId], references: [id], onDelete: Restrict)
+  registrations Registration[]
+  tickets       Ticket[]
+
+  @@unique([eventId, name])
+  @@index([eventId, isActive])
+}
+
+model Registration {
+  id           String             @id @default(cuid())
+  attendeeId   String
+  eventId      String
+  ticketTypeId String
+  quantity     Int
+  unitPrice    Int
+  totalPrice   Int
+  status       RegistrationStatus @default(PENDING)
+  registeredAt DateTime           @default(now()) @db.Timestamptz(3)
+  cancelledAt  DateTime?          @db.Timestamptz(3)
+  expiresAt    DateTime?          @db.Timestamptz(3)
+
+  attendee   User       @relation("RegistrationAttendee", fields: [attendeeId], references: [id], onDelete: Restrict)
+  event      Event      @relation(fields: [eventId], references: [id], onDelete: Restrict)
+  ticketType TicketType @relation(fields: [ticketTypeId], references: [id], onDelete: Restrict)
+  payment    Payment?
+  tickets    Ticket[]
+
+  @@index([attendeeId, registeredAt])
+  @@index([eventId, status])
+  @@index([ticketTypeId, status, expiresAt])
+  @@index([status, expiresAt])
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+  registrationId    String        @unique
+  providerReference String        @unique
+  amount            Int
+  currency          String        @default("LKR")
+  status            PaymentStatus @default(PENDING)
+  createdAt         DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt         DateTime      @updatedAt @db.Timestamptz(3)
+  confirmedAt       DateTime?     @db.Timestamptz(3)
+
+  registration Registration @relation(fields: [registrationId], references: [id], onDelete: Restrict)
+
+  @@index([status, createdAt])
+}
+
+model Ticket {
+  id             String       @id @default(cuid())
+  ticketNumber   String       @unique
+  qrToken        String       @unique
+  registrationId String
+  attendeeId     String
+  eventId        String
+  ticketTypeId   String
+  status         TicketStatus @default(VALID)
+  checkedInAt    DateTime?    @db.Timestamptz(3)
+  createdAt      DateTime     @default(now()) @db.Timestamptz(3)
+
+  registration Registration @relation(fields: [registrationId], references: [id], onDelete: Restrict)
+  attendee     User         @relation("TicketAttendee", fields: [attendeeId], references: [id], onDelete: Restrict)
+  event        Event        @relation(fields: [eventId], references: [id], onDelete: Restrict)
+  ticketType   TicketType   @relation(fields: [ticketTypeId], references: [id], onDelete: Restrict)
+
+  @@index([attendeeId, createdAt])
+  @@index([eventId, status])
+  @@index([registrationId])
+}

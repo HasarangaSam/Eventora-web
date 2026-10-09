@@ -1,12 +1,18 @@
 import { Controller, Get } from '@nestjs/common';
+import { PrismaService } from './prisma/prisma.service.js';
 
 @Controller('health')
 export class AppController {
+  constructor(private readonly prisma: PrismaService) {}
+
   @Get()
-  getHealth() {
+  async getHealth() {
+    await this.prisma.$queryRaw`SELECT 1`;
+
     return {
       status: 'ok',
       application: 'Eventora API',
+      database: 'connected',
       timestamp: new Date().toISOString(),
     };
   }
