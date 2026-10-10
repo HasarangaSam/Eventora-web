@@ -6,6 +6,7 @@ import { PrismaModule } from './prisma/prisma.module.js';
 import { CategoriesModule } from './categories/categories.module.js';
 import { EventsModule } from './events/events.module.js';
 import { EventSessionsModule } from './event-sessions/event-sessions.module.js';
+import { TicketTypesModule } from './ticket-types/ticket-types.module.js';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { EventSessionsModule } from './event-sessions/event-sessions.module.js';
     CategoriesModule,
     EventsModule,
     EventSessionsModule,
+    TicketTypesModule,
   ],
   controllers: [AppController],
 })
