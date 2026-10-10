@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { CategoriesModule } from './categories/categories.module.js';
 import { EventsModule } from './events/events.module.js';
+import { EventSessionsModule } from './event-sessions/event-sessions.module.js';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { EventsModule } from './events/events.module.js';
     AuthModule,
     CategoriesModule,
     EventsModule,
+    EventSessionsModule,
   ],
   controllers: [AppController],
 })
