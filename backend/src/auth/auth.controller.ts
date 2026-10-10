@@ -1,16 +1,23 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, UseGuards } from '@nestjs/common';
+import type { User } from '../../generated/prisma/client.js';
+import { AppUserGuard } from './app-user.guard.js';
 import { ClerkAuthGuard } from './clerk-auth.guard.js';
-import type { ClerkAuthenticatedRequest } from './clerk-auth.guard.js';
+import { CurrentUser } from './current-user.decorator.js';
 
 @Controller('auth')
 export class AuthController {
   @Get('me')
-  @UseGuards(ClerkAuthGuard)
-  getCurrentIdentity(@Req() request: ClerkAuthenticatedRequest) {
+  @UseGuards(ClerkAuthGuard, AppUserGuard)
+  getCurrentUser(@CurrentUser() user: User) {
     return {
-      authenticated: true,
-      clerkUserId: request.auth!.userId,
-      sessionId: request.auth!.sessionId,
+      id: user.id,
+      clerkId: user.clerkId,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      isActive: user.isActive,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
     };
   }
 }

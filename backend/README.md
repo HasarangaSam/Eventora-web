@@ -31,6 +31,21 @@
 $ npm install
 ```
 
+## Clerk and database setup
+
+- Configure the backend with `DATABASE_URL`, `CLERK_SECRET_KEY`, and
+  `CLERK_WEBHOOK_SECRET`; configure the frontend with its Clerk publishable key
+  and `VITE_API_URL`.
+- Use keys from the same Clerk instance and environment (development or
+  production) for both frontend and backend.
+- In Clerk, create a webhook pointing to
+  `https://<backend-host>/api/webhooks/clerk`, subscribe to `user.created` and
+  `user.updated`, and set `CLERK_WEBHOOK_SECRET` to that endpoint's signing
+  secret.
+- The authenticated `GET /api/auth/me` endpoint also creates or updates the
+  application user, so a successful Clerk sign-in can provision the database
+  row even if webhook delivery is delayed.
+
 ## Compile and run the project
 
 ```bash

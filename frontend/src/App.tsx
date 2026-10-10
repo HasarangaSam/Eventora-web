@@ -1,3 +1,4 @@
+import axios from "axios";
 import { SignIn, SignUp, UserButton, useAuth, useUser } from "@clerk/react";
 import { Link, Route, Routes } from "react-router-dom";
 import { useState } from "react";
@@ -129,10 +130,20 @@ function AuthTestPage() {
       const api = createApiClient(getToken);
       const response = await api.get("/auth/me");
       setResult(JSON.stringify(response.data, null, 2));
-    } catch {
-      setResult(
-        "The API request failed. Check that the backend is running and the Clerk token is configured correctly.",
-      );
+    } catch (error: unknown) {
+      if (axios.isAxiosError<{ message?: string | string[] }>(error)) {
+        const apiMessage = error.response?.data?.message;
+        setResult(
+          (Array.isArray(apiMessage) ? apiMessage.join(", ") : apiMessage) ??
+            error.message,
+        );
+      } else {
+        setResult(
+          error instanceof Error
+            ? error.message
+            : "The API request failed for an unknown reason.",
+        );
+      }
     } finally {
       setLoading(false);
     }
