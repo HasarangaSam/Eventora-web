@@ -7,6 +7,7 @@ import { CategoriesModule } from './categories/categories.module.js';
 import { EventsModule } from './events/events.module.js';
 import { EventSessionsModule } from './event-sessions/event-sessions.module.js';
 import { TicketTypesModule } from './ticket-types/ticket-types.module.js';
+import { RegistrationsModule } from './registrations/registrations.module.js';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { TicketTypesModule } from './ticket-types/ticket-types.module.js';
     EventsModule,
     EventSessionsModule,
     TicketTypesModule,
+    RegistrationsModule,
   ],
   controllers: [AppController],
 })
